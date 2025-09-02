@@ -3,15 +3,45 @@
 
 // #region init functions
 let appState="listView"
+let activeList=0   
+
+let currentData=null
+
+const dummyData = {
+    darkMode: false,
+    lists: [
+        { id: 1, name: 'List 1', items: [
+            { id: 1, name: 'Item 1', completed: false },
+            { id: 2, name: 'Item 2', completed: true }
+        ] },
+        { id: 2, name: 'List 2', items: [
+            { id: 3, name: 'Item 3', completed: false },
+            { id: 4, name: 'Item 4', completed: true }
+        ] }
+    ],
+};
+
 
 const mainContent = document.getElementById('content');
-setupStatics();
+
+initApp();
+
+function initApp() {
+    console.log('initApp called');
+    let storeddata=readData();
+    if (storeddata==null) {
+        currentData =dummyData;
+        saveData(currentData);
+    } else {
+        currentData = storeddata;
+    }
+    setupStatics();
+}
 
 
 // Setup static event listeners and elements (model code)
 function setupStatics() {
 console.log('setupStatics called');
-
     const newButton = document.getElementById('newListButton');
     newListButton.addEventListener('click', newCallback);
       listView();
@@ -35,7 +65,7 @@ function newCallback() {
 
              case "itemView":
                console.log('create new item');
-    newItemCreationView();
+    newItemCreationView(activeList);
             break;
     
         default:
@@ -46,11 +76,14 @@ function newCallback() {
 }
 
 // List click callback function with switch for different actions on the list
-function listClickCallback(action) {
+function listClickCallback(action, index) {
+    console.log('List click action:', action, 'Index:', index);
     switch (action) {
         case 'showList':
             console.log(' list clicked show items');
             appState = "itemView";
+            activeList = index;
+            listItemView();
             break;
 
              case 'deleteList':
@@ -120,6 +153,52 @@ function newListCreationView() {
     content.appendChild(section);
 }
 
+function newItemCreationView(){
+    // Get the content element
+    const content = document.getElementById('content');
+    
+    // Clear the content
+    content.innerHTML = '';
+    
+    // Create a section container
+    const section = document.createElement('section');
+    
+    // Create label
+    const label = document.createElement('label');
+    label.textContent = 'Name:';
+    label.setAttribute('for', 'listName');
+    
+    // Create text input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'listName';
+    input.value = 'default name';
+    
+    // Create OK button
+    const okButton = document.createElement('button');
+    okButton.textContent = 'OK';
+    okButton.addEventListener('click', () => {
+        console.log('OK clicked, list name:', input.value);
+        listItemView();
+    });
+    
+    // Create Cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.addEventListener('click', () => {
+        console.log('Cancel clicked');
+      listItemView();
+    });
+    
+    // Append all elements to the section
+    section.appendChild(label);
+    section.appendChild(input);
+    section.appendChild(okButton);
+    section.appendChild(cancelButton);
+    
+    // Append section to content
+    content.appendChild(section);  
+}
 
 
 
@@ -130,9 +209,70 @@ function newListCreationView() {
 function listView(){
     
     mainContent.innerHTML = '';
-    const list = document.createElement('div');
-    list.innerHTML = '<h2 onclick="listClickCallback(\'showList\')">List View</h2><button onclick="listClickCallback(\'deleteList\')">Delete</button><button onclick="listClickCallback(\'editList\')">Edit</button>';
-    mainContent.appendChild(list);
+     appState = "listView";
+   currentData.lists.forEach((list,index) => {
+       const listElement = document.createElement('div');
+       listElement.innerHTML = `<h2 onclick="listClickCallback('showList',${index})">${list.name}</h2>
+       <button onclick="listClickCallback('editList',${index})">${list.name}>edit</button>
+       <button onclick="listClickCallback('deleteList',${index})">delete</button>`;
+       mainContent.appendChild(listElement);
+   });
 }
+
+function listItemView() {
+    console.log('List item view for index:', activeList);
+    const list = currentData.lists[activeList];
+    if (!list) {
+        console.error('List not found:', activeList);
+        return;
+    }
+    appState="itemView"
+    mainContent.innerHTML = '';
+    const title = document.createElement('h2');
+    title.textContent = list.name;
+    mainContent.appendChild(title);
+
+    const itemsContainer = document.createElement('div');
+    list.items.forEach((item, itemIndex) => {
+        const itemElement = document.createElement('div');
+        itemElement.innerHTML = `<span>${item.name}</span>
+        <button onclick="itemClickCallback('editItem',${itemIndex})">edit</button>
+        <button onclick="itemClickCallback('deleteItem',${itemIndex})">delete</button>`;
+        itemsContainer.appendChild(itemElement);
+    });
+    mainContent.appendChild(itemsContainer);
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back';
+    backButton.addEventListener('click', () => {
+        listView();
+    });
+    mainContent.appendChild(backButton);
+}
+
+// #endregion
+
+
+// #region model code  
+
+
+
+
+
+
+
+function readData() {
+    // Simulate reading data from a database or API
+    const storedData=localStorage.getItem('ToDooListApp_v1');
+
+    return JSON.parse(storedData)
+
+}
+
+function saveData(data) {
+    // Simulate saving data to a database or API
+    localStorage.setItem('ToDooListApp_v1', JSON.stringify(data));
+}
+
+
 
 // #endregion
