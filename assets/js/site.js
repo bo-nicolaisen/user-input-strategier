@@ -213,7 +213,7 @@ function listView(){
    currentData.lists.forEach((list,index) => {
        const listElement = document.createElement('div');
        listElement.innerHTML = `<h2 onclick="listClickCallback('showList',${index})">${list.name}</h2>
-       <button onclick="listClickCallback('editList',${index})">${list.name}>edit</button>
+       <button onclick="listClickCallback('editList',${index})">edit</button>
        <button onclick="listClickCallback('deleteList',${index})">delete</button>`;
        mainContent.appendChild(listElement);
    });
@@ -253,12 +253,6 @@ function listItemView() {
 
 
 // #region model code  
-
-
-
-
-
-
 
 function readData() {
     // Simulate reading data from a database or API
